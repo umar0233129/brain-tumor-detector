@@ -3,40 +3,34 @@ import tensorflow as tf
 import numpy as np
 from PIL import Image
 import gdown
-import os
 
-MODEL_URL = 'https://drive.google.com/uc?id=1Mylf9TBYBwSDGdzeqZPEAPKq354W1I1-'
+# Download model from Google Drive (direct link or use gdown)
 MODEL_PATH = 'model.h5'
+if not tf.io.gfile.exists(MODEL_PATH):
+    gdown.download('https://drive.google.com/uc?id=1Mylf9TBYBwSDGdzeqZPEAPKq354W1I1-', MODEL_PATH, quiet=False)
 
-@st.cache_resource
-def load_model():
-    if not os.path.exists(MODEL_PATH):
-        gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
-    model = tf.keras.models.load_model(MODEL_PATH)
-    return model
+# Load model
+model = tf.keras.models.load_model(MODEL_PATH)
 
-model = load_model()
-class_names = ['pituitary', 'glioma', 'notumor', 'meningioma']
+# Class names
+class_names = ['glioma', 'meningioma', 'notumor', 'pituitary']
 
-st.title("🧠 Brain Tumor Detector")
-st.write("Upload an MRI image to detect brain tumor.")
+# Streamlit UI
+st.title("Brain Tumor Detection")
+st.write("Upload an MRI image to detect tumor type.")
 
-uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Choose an MRI image", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file).convert('RGB')
+    image = Image.open(uploaded_file).resize((128, 128))
     st.image(image, caption='Uploaded Image', use_column_width=True)
 
-    img = image.resize((128, 128))
-    img_array = tf.keras.utils.img_to_array(img)
+    img_array = np.array(image) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    predictions = model.predict(img_array)
-    predicted_class = np.argmax(predictions)
-    confidence = np.max(predictions) * 100
+    prediction = model.predict(img_array)
+    pred_class = class_names[np.argmax(prediction)]
+    confidence = np.max(prediction)
 
-    if class_names[predicted_class] == 'notumor':
-        st.success(f"✅ No Tumor Detected! Confidence: {confidence:.2f}%")
-    else:
-        st.error(f"⚠️ Tumor Detected: {class_names[predicted_class]} (Confidence: {confidence:.2f}%)")
-
+    st.subheader(f"Prediction: **{pred_class.upper()}**")
+    st.write(f"Confidence: {confidence * 100:.2f}%")

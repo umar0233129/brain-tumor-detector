@@ -1,11 +1,19 @@
 import streamlit as st
+import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
-import numpy as np
 from PIL import Image
+import gdown
+import os
+
+# Download model from Google Drive
+model_path = "model.h5"
+if not os.path.exists(model_path):
+    url = "https://drive.google.com/uc?id=1Mylf9TBYBwSDGdzeqZPEAPKq354W1I1-"
+    gdown.download(url, model_path, quiet=False)
 
 # Load the trained model
-model = load_model('model.h5')
+model = load_model(model_path)
 
 # Class labels
 class_names = ['pituitary', 'glioma', 'notumor', 'meningioma']

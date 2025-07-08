@@ -1,6 +1,7 @@
-streamlit==1.26.0
+streamlit
 tensorflow-cpu>=2.15.0,<=2.16.2
 pillow
 numpy
 gdown
+
 
